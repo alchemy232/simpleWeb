@@ -1,0 +1,137 @@
+NAME: mydeploy
+LAST DEPLOYED: Thu Oct  7 23:17:04 2021
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+HOOKS:
+---
+# Source: mychart/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "mydeploy-mychart-test-connection"
+  labels:
+    helm.sh/chart: mychart-0.1.0
+    app.kubernetes.io/name: mychart
+    app.kubernetes.io/instance: mydeploy
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['mydeploy-mychart:8080']
+  restartPolicy: Never
+MANIFEST:
+---
+# Source: mychart/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mydeploy-mychart
+  labels:
+    helm.sh/chart: mychart-0.1.0
+    app.kubernetes.io/name: mychart
+    app.kubernetes.io/instance: mydeploy
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: mychart/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mydeploy-mychart
+  labels:
+    helm.sh/chart: mychart-0.1.0
+    app.kubernetes.io/name: mychart
+    app.kubernetes.io/instance: mydeploy
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: mychart
+    app.kubernetes.io/instance: mydeploy
+---
+# Source: mychart/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mydeploy-mychart
+  labels:
+    helm.sh/chart: mychart-0.1.0
+    app.kubernetes.io/name: mychart
+    app.kubernetes.io/instance: mydeploy
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mychart
+      app.kubernetes.io/instance: mydeploy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mychart
+        app.kubernetes.io/instance: mydeploy
+    spec:
+      serviceAccountName: mydeploy-mychart
+      securityContext:
+        {}
+      containers:
+        - name: mychart
+          securityContext:
+            {}
+          image: "alchemy232/myrepo:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+          resources:
+            {}
+---
+# Source: mychart/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mydeploy-mychart
+  labels:
+    helm.sh/chart: mychart-0.1.0
+    app.kubernetes.io/name: mychart
+    app.kubernetes.io/instance: mydeploy
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+    - host: "www.myjava.ru"
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: mydeploy-mychart
+                port:
+                  number: 8080
+
+NOTES:
+1. Get the application URL by running these commands:
+  http://www.myjava.ru/
