@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mygithubdeploy
+  labels:
+  	github: deploy
+spec:
+  rules:
+    - host: "www.myjava8081.ru"
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: mygithubdeploy
+                port:
+                  number: 8081
+
